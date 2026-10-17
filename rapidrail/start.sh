@@ -35,10 +35,10 @@ done
 
 export DB_PASSWORD
 if [ -n "${RAZORPAY_KEY_ID:-}" ] && [ -n "${RAZORPAY_KEY_SECRET:-}" ]; then
-  echo "Razorpay keys detected — online top-ups enabled."
+  echo "Using Razorpay keys from environment."
   export RAZORPAY_KEY_ID RAZORPAY_KEY_SECRET
 else
-  echo "No Razorpay keys — demo top-up only. (Set RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET to enable.)"
+  echo "Using built-in Razorpay test keys (override with RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET)."
 fi
 echo "Starting EventPass on http://localhost:8081 ..."
 mvn spring-boot:run

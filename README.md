@@ -107,8 +107,8 @@ Seeded organizers (all use access code `organizer123`):
 
 12 seeded events across all 4 categories (4 concerts, 4 workshops, 2 seminars, 2 others),
 with staggered dates, prices (₹99–₹1099) and venues — enough to make browsing feel like an app.
-Each event has a poster image (`Event.imageUrl`, local `/img/posters/*.svg` by default,
-overridable per event by organizers); cards render the image with a gradient fallback.
+Each event has a poster photo (`Event.imageUrl`, deterministic picsum.photos seeds by default,
+overridable per event by organizers); cards render the photo with a soft gradient fallback for offline use.
 
 ### Discovering events (browse / recommended)
 - `GET /api/events?upcoming=true` — future events, soonest first (the default browse view).
@@ -132,12 +132,9 @@ fixed to compile standalone (its pom omitted the SDK dep) and to use BigDecimal 
   signature checked, wallet credited **exactly once** (replays return COMPLETED without re-crediting).
 - `POST /api/payments/failure`, `GET /api/payments/status/{orderId}`, `GET /api/payments/history/{userId}`.
 
-Enable with your own test keys (never commit them):
+Works out of the box with built-in TEST keys (no real money). Swap in your own test keys via env:
 ```bash
-export RAZORPAY_KEY_ID='rzp_test_...'
-export RAZORPAY_KEY_SECRET='...'
-cd rapidrail && mvn spring-boot:run
-# or: RAZORPAY_KEY_ID='...' RAZORPAY_KEY_SECRET='...' ./start.sh
+RAZORPAY_KEY_ID='rzp_test_...' RAZORPAY_KEY_SECRET='...' ./start.sh
 ```
 Verified live against Razorpay test mode (real `order_*` ID created, status PENDING). The browser
 checkout step (UPI/card form) is manual — signature math and idempotent credit are unit-tested.
@@ -258,11 +255,11 @@ cd rapidrail && mvn test   # 23 tests, H2 in-memory, MySQL not required
 
 ## UI theme (ui-ux-pro-max)
 
-Dark vibrant entertainment theme: slate surfaces, green CTA, per-category badge hues
-(Concert violet / Workshop amber / Seminar sky / Other teal), Inter + Playfair Display,
-hero with search, category pills with counts, scroll-snap recommendations, hover lift,
-visible focus rings, `prefers-reduced-motion` support, responsive down to 375px,
-SVG icon set (no structural emoji), tables scroll horizontally on small screens.
+Light, sleek and modern: white surfaces, slate text, indigo accent, pastel per-category
+badges (Concert / Workshop / Seminar / Other), Inter + Playfair Display, hero with search,
+category pills with counts, scroll-snap recommendations, hover lift, visible focus rings,
+`prefers-reduced-motion` support, responsive down to 375px, SVG icon set (no structural
+emoji), tables scroll horizontally on small screens.
 
 ## Limitations
 
