@@ -41,7 +41,8 @@ public class CheckInService {
         Organizer organizer = organizerService.authenticate(organizerId, organizerCode);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CheckInException(CheckInResult.INVALID, "Event not found"));
-        if (!event.getOrganizer().getId().equals(organizer.getId())) {
+        // Site admins may check in for any event; organizers only their own.
+        if (!organizer.isAdmin() && !event.getOrganizer().getId().equals(organizer.getId())) {
             throw new CheckInException(CheckInResult.WRONG_EVENT, "Event does not belong to this organizer");
         }
 

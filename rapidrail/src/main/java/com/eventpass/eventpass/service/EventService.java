@@ -102,7 +102,8 @@ public class EventService {
     public Event update(Long id, Event update, Long organizerId, String organizerCode) {
         Event existing = getById(id);
         Organizer caller = organizerService.authenticate(organizerId, organizerCode);
-        if (!existing.getOrganizer().getId().equals(caller.getId())) {
+        // Site admins may manage any event; organizers only their own.
+        if (!caller.isAdmin() && !existing.getOrganizer().getId().equals(caller.getId())) {
             throw new RuntimeException("Not authorized: event belongs to another organizer");
         }
         if (update.getTitle() != null && !update.getTitle().isBlank()) existing.setTitle(update.getTitle().trim());
@@ -138,7 +139,7 @@ public class EventService {
     public void delete(Long id, Long organizerId, String organizerCode) {
         Event existing = getById(id);
         Organizer caller = organizerService.authenticate(organizerId, organizerCode);
-        if (!existing.getOrganizer().getId().equals(caller.getId())) {
+        if (!caller.isAdmin() && !existing.getOrganizer().getId().equals(caller.getId())) {
             throw new RuntimeException("Not authorized: event belongs to another organizer");
         }
         if (bookingRepository.countByEventIdAndStatus(id, "CONFIRMED") > 0) {

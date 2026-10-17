@@ -15,8 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
 function showPanel() {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("organizerPanel").style.display = "block";
-    document.getElementById("orgBadge").innerText =
-        `${localStorage.getItem("organizerName") || ""} (#${localStorage.getItem("organizerId")})`;
+    const adminTag = localStorage.getItem("isAdmin") ? ' <span class="badge-status ok">ADMIN</span>' : "";
+    document.getElementById("orgBadge").innerHTML =
+        `${escapeHtml(localStorage.getItem("organizerName") || "")} (#${localStorage.getItem("organizerId")})${adminTag}`;
+    document.getElementById("eventsHeading").innerText =
+        localStorage.getItem("isAdmin") ? "All Events (admin)" : "My Events";
     loadAll();
 }
 
@@ -24,6 +27,17 @@ async function organizerLogin() {
     const email = document.getElementById("orgEmail").value.trim();
     const code = document.getElementById("orgCode").value;
     if (!email || !code) return alert("Email and access code are required");
+    await loginAs(email, code);
+}
+
+// One-click demo login (fills + submits, no typing).
+async function quickLogin(email, code) {
+    document.getElementById("orgEmail").value = email;
+    document.getElementById("orgCode").value = code;
+    await loginAs(email, code);
+}
+
+async function loginAs(email, code) {
     try {
         const listRes = await fetch(`${API}/organizers`);
         const orgs = await listRes.json();
@@ -44,6 +58,7 @@ async function organizerLogin() {
         localStorage.setItem("organizerId", verified.id);
         localStorage.setItem("organizerName", verified.organizationName || verified.name);
         localStorage.setItem("organizerCode", code);
+        localStorage.setItem("isAdmin", verified.admin ? "1" : "");
         document.getElementById("loginError").style.display = "none";
         showPanel();
     } catch (e) { alert("Server not reachable."); }
@@ -93,7 +108,8 @@ function authHeaders() {
 // ---------- EVENTS ----------
 async function loadEvents() {
     const orgId = localStorage.getItem("organizerId");
-    const res = await fetch(`${API}/events?organizerId=${orgId}`);
+    const adminView = !!localStorage.getItem("isAdmin");
+    const res = await fetch(adminView ? `${API}/events` : `${API}/events?organizerId=${orgId}`);
     myEvents = await res.json();
     myEvents.sort((a, b) => new Date(a.eventDateTime) - new Date(b.eventDateTime));
 

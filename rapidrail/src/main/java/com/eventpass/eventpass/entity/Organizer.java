@@ -31,6 +31,11 @@ public class Organizer {
     @Column(nullable = false, name = "access_code_hash")
     private String accessCodeHash;
 
+    // Site admin: may manage any event and check in for any event.
+    // Set only in code/DB seeds — no API can grant it.
+    @Column(nullable = false)
+    private boolean admin = false;
+
     public Organizer() {}
 
     public Long getId() { return id; }
@@ -43,4 +48,6 @@ public class Organizer {
     public void setOrganizationName(String organizationName) { this.organizationName = organizationName; }
     public String getAccessCodeHash() { return accessCodeHash; }
     public void setAccessCodeHash(String accessCodeHash) { this.accessCodeHash = accessCodeHash; }
+    public boolean isAdmin() { return admin; }
+    public void setAdmin(boolean admin) { this.admin = admin; }
 }

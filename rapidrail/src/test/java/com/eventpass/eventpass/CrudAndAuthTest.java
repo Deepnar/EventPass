@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.eventpass.eventpass.entity.Organizer;
+import com.eventpass.eventpass.repository.OrganizerRepository;
 import com.eventpass.eventpass.service.EventService;
 import com.eventpass.eventpass.service.OrganizerService;
 import com.eventpass.eventpass.util.PasswordUtil;
@@ -17,6 +18,7 @@ class CrudAndAuthTest {
 
     @Autowired OrganizerService organizerService;
     @Autowired EventService eventService;
+    @Autowired OrganizerRepository organizerRepository;
 
     @Test
     void organizerCrudWithServerSideAuth() {
@@ -67,5 +69,41 @@ class CrudAndAuthTest {
         patch.setImageUrl("https://example.com/p.png");
         assertEquals("https://example.com/p.png",
                 eventService.update(saved.getId(), patch, o.getId(), "code1234").getImageUrl());
+    }
+
+    @Test
+    void adminBypassesOwnershipWhileOthersAreBlocked() {
+        com.eventpass.eventpass.entity.Organizer owner =
+                organizerService.create("Owner", "owner@example.com", "Owner Org", "code1234");
+        com.eventpass.eventpass.entity.Organizer stranger =
+                organizerService.create("Stranger", "stranger@example.com", "Stranger Org", "code1234");
+        com.eventpass.eventpass.entity.Organizer admin =
+                organizerService.create("Root", "root@example.com", "Root Org", "code1234");
+        admin.setAdmin(true);
+        admin = organizerRepository.save(admin);
+
+        com.eventpass.eventpass.entity.Event e = new com.eventpass.eventpass.entity.Event();
+        e.setTitle("Owned Gig");
+        e.setCategory("Concert");
+        e.setVenue("Hall");
+        e.setEventDateTime(java.time.LocalDateTime.now().plusDays(3));
+        e.setTicketPrice(new java.math.BigDecimal("50.00"));
+        e.setTotalCapacity(30);
+        e = eventService.create(e, owner.getId(), "code1234");
+
+        com.eventpass.eventpass.entity.Event patch = new com.eventpass.eventpass.entity.Event();
+        patch.setVenue("New Hall");
+
+        // stranger is forbidden
+        final Long eventId = e.getId();
+        final Long strangerId = stranger.getId();
+        assertThrows(RuntimeException.class,
+                () -> eventService.update(eventId, patch, strangerId, "code1234"));
+
+        // admin can edit and delete anything
+        assertEquals("New Hall",
+                eventService.update(eventId, patch, admin.getId(), "code1234").getVenue());
+        eventService.delete(eventId, admin.getId(), "code1234");
+        assertThrows(RuntimeException.class, () -> eventService.getById(eventId));
     }
 }

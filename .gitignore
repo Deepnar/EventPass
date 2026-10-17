@@ -2,3 +2,6 @@
 # opencode skill cache
 .opencode/
 .vscode/
+
+# local secrets (never commit)
+.env

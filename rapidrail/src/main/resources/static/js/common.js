@@ -11,6 +11,7 @@ function organizerLogout() {
     localStorage.removeItem("organizerId");
     localStorage.removeItem("organizerName");
     localStorage.removeItem("organizerCode");
+    localStorage.removeItem("isAdmin");
     window.location.reload();
 }
 

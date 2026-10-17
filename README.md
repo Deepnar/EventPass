@@ -48,15 +48,15 @@ What the script does = the manual steps below, so prefer it unless Docker is una
 ## 3. Run it — option B: manual with Docker
 
 ```bash
-# MySQL 8 in Docker (first time only)
+# MySQL 8 in Docker (first time only) — use any strong password, it stays on your machine
 docker run -d --name eventpass_mysql \
-  -e MYSQL_ROOT_PASSWORD='***REMOVED_DB_PASSWORD***' \
+  -e MYSQL_ROOT_PASSWORD="$DB_PASSWORD" \
   -e MYSQL_DATABASE=eventpass \
   -p 3306:3306 mysql:8.0
 
-# App (DB password via env so it never lives in a file you edit)
+# App (DB password from rapidrail/.env or environment — never from the repo)
 cd rapidrail
-DB_PASSWORD='***REMOVED_DB_PASSWORD***' mvn spring-boot:run
+mvn spring-boot:run
 ```
 
 ## 3. Run it — option C: local MySQL, no Docker (college Windows laptop)
@@ -84,7 +84,7 @@ then restart the app — Hibernate recreates tables and reseeds demo data.
 |---|---|---|
 | App port | `8081` | `server.port` in `application.properties` |
 | DB host/port/name/user | `localhost:3306` / `eventpass` / `root` | `spring.datasource.*` in `application.properties` |
-| DB password | `***REMOVED_DB_PASSWORD***` (local dev only) | `DB_PASSWORD` env var (recommended) |
+| DB password | *(none in repo)* — generated into `rapidrail/.env` on first `./start.sh` | `DB_PASSWORD` env var or `.env` file |
 | Razorpay key id | built-in TEST key (works out of the box) | `RAZORPAY_KEY_ID` env var |
 | Razorpay secret | built-in TEST key | `RAZORPAY_KEY_SECRET` env var |
 
@@ -250,7 +250,7 @@ recommendations (3).
 ## 10. Browsing the database (DBeaver)
 
 New Connection → MySQL: Host `localhost`, Port `3306`, Database `eventpass`,
-user `root`, password = your `DB_PASSWORD` (`***REMOVED_DB_PASSWORD***` for the Docker default).
+user `root`, password = your `DB_PASSWORD` (see `rapidrail/.env` when using `./start.sh`).
 Test Connection → Finish → Databases → `eventpass` → Tables
 (`users, organizers, events, bookings, tickets, check_ins, payments`) → View Data.
 

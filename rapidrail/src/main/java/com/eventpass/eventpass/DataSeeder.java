@@ -28,9 +28,11 @@ public class DataSeeder {
     @Bean
     CommandLineRunner seed(OrganizerRepository organizerRepo, EventRepository eventRepo) {
         return args -> {
-            Organizer rhythm = ensureOrganizer(organizerRepo, "Aarav Sharma", "aarav@rhythmnights.in", "Rhythm Nights");
-            Organizer skillHum = ensureOrganizer(organizerRepo, "Meera Iyer", "meera@skillhum.in", "SkillHum Academy");
-            Organizer cityArts = ensureOrganizer(organizerRepo, "Kabir Rao", "kabir@cityarts.in", "CityArts Collective");
+            Organizer rhythm = ensureOrganizer(organizerRepo, "Aarav Sharma", "aarav@rhythmnights.in", "Rhythm Nights", "organizer123", false);
+            Organizer skillHum = ensureOrganizer(organizerRepo, "Meera Iyer", "meera@skillhum.in", "SkillHum Academy", "organizer123", false);
+            Organizer cityArts = ensureOrganizer(organizerRepo, "Kabir Rao", "kabir@cityarts.in", "CityArts Collective", "organizer123", false);
+            // Site admin: ready-made login with full event/check-in rights (code: admin123).
+            ensureOrganizer(organizerRepo, "Site Admin", "admin@eventpass.in", "EventPass", "admin123", true);
 
             List<SeedEvent> seeds = List.of(
                 new SeedEvent("Monsoon Beats Concert", "Live indie concert under the monsoon sky. Gates open 1 hour early.",
@@ -92,14 +94,22 @@ public class DataSeeder {
         };
     }
 
-    private Organizer ensureOrganizer(OrganizerRepository repo, String name, String email, String orgName) {
-        return repo.findByEmail(email).orElseGet(() -> {
-            Organizer o = new Organizer();
-            o.setName(name);
-            o.setEmail(email);
-            o.setOrganizationName(orgName);
-            o.setAccessCodeHash(PasswordUtil.hash("organizer123"));
-            return repo.save(o);
-        });
+    private Organizer ensureOrganizer(OrganizerRepository repo, String name, String email,
+                                      String orgName, String accessCode, boolean admin) {
+        Organizer existing = repo.findByEmail(email).orElse(null);
+        if (existing != null) {
+            if (existing.isAdmin() != admin) {
+                existing.setAdmin(admin);
+                return repo.save(existing);
+            }
+            return existing;
+        }
+        Organizer o = new Organizer();
+        o.setName(name);
+        o.setEmail(email);
+        o.setOrganizationName(orgName);
+        o.setAccessCodeHash(PasswordUtil.hash(accessCode));
+        o.setAdmin(admin);
+        return repo.save(o);
     }
 }
