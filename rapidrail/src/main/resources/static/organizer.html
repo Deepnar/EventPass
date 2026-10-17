@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EventPass - Organizer Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .pin-overlay {
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.98);
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .pin-card {
+            background: white; padding: 40px; border-radius: var(--radius);
+            max-width: 420px; width: 90%; text-align: center;
+        }
+        .result-valid { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+        .result-used { background: #fff3e0; color: #e65100; border-left: 4px solid #e65100; }
+        .result-denied { background: #ffebee; color: #b71c1c; border-left: 4px solid #b71c1c; }
+    </style>
+</head>
+<body>
+    <!-- ORGANIZER LOGIN (verified server-side) -->
+    <div id="loginOverlay" class="pin-overlay">
+        <div class="pin-card">
+            <h2 style="margin-top:0;">🎪 Organizer Login</h2>
+            <p class="text-muted">Sign in with your organizer email + access code.<br>Demo code for seeded organizers: <code>organizer123</code></p>
+            <input id="orgEmail" type="email" class="form-control" placeholder="organizer email" style="margin:8px 0;">
+            <input id="orgCode" type="password" class="form-control" placeholder="access code" style="margin:8px 0 14px 0;">
+            <button class="btn-primary-custom" style="width:100%;" onclick="organizerLogin()">Sign In</button>
+            <p id="loginError" style="color:#dc2626;display:none;margin-top:10px;">Invalid credentials</p>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;text-align:left;">
+                <strong style="font-size:0.9rem;">New organizer?</strong>
+                <input id="newName" class="form-control" placeholder="Your name" style="margin:8px 0;">
+                <input id="newOrg" class="form-control" placeholder="Organization name" style="margin:8px 0;">
+                <input id="newEmail" type="email" class="form-control" placeholder="Email" style="margin:8px 0;">
+                <input id="newCode" type="password" class="form-control" placeholder="Choose access code (min 4 chars)" style="margin:8px 0;">
+                <button class="btn-secondary-custom" style="width:100%;" onclick="organizerRegister()">Register Organizer</button>
+            </div>
+            <a href="index.html" style="display:block;margin-top:14px;color:var(--text-muted);text-decoration:none;font-size:0.85rem;">← Back to attendee login</a>
+        </div>
+    </div>
+
+    <div id="organizerPanel" style="display:none;max-width:1200px;margin:24px auto;padding:0 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+            <h2 style="color:white;margin:0;">🎟️ EventPass Organizer</h2>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span id="orgBadge" style="color:white;font-size:0.9rem;"></span>
+                <a href="dashboard.html" style="color:white;text-decoration:none;">Attendee view</a>
+                <button class="btn-danger-custom" onclick="organizerLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="active" data-tab="events" onclick="switchTab('events')">Events</button>
+            <button data-tab="checkin" onclick="switchTab('checkin')">Check-In Scan</button>
+            <button data-tab="bookings" onclick="switchTab('bookings')">Bookings</button>
+            <button data-tab="tickets" onclick="switchTab('tickets')">Tickets</button>
+            <button data-tab="history" onclick="switchTab('history')">Check-In History</button>
+            <button data-tab="organizers" onclick="switchTab('organizers')">Organizers</button>
+        </div>
+
+        <!-- EVENTS -->
+        <div id="eventsTab" class="card">
+            <h3 style="margin-top:0;">My Events</h3>
+            <form id="eventForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+                <input class="form-control" id="eTitle" placeholder="Title" required>
+                <select class="form-select" id="eCategory" required>
+                    <option value="">Category...</option>
+                    <option>Concert</option><option>Workshop</option><option>Seminar</option><option>Other</option>
+                </select>
+                <input class="form-control" id="eVenue" placeholder="Venue" required>
+                <input class="form-control" id="eTime" type="datetime-local" required>
+                <input class="form-control" id="ePrice" type="number" min="0" step="0.01" placeholder="Ticket Price (₹)" required>
+                <input class="form-control" id="eCapacity" type="number" min="1" placeholder="Total Capacity" required>
+                <textarea class="form-control" id="eDesc" placeholder="Description" style="grid-column:1/-1;"></textarea>
+                <button type="submit" class="btn-primary-custom">+ Add Event</button>
+            </form>
+            <table>
+                <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Venue</th><th>Date/Time</th><th>Price</th><th>Seats</th><th></th></tr></thead>
+                <tbody id="eventRows"></tbody>
+            </table>
+        </div>
+
+        <!-- CHECK-IN -->
+        <div id="checkinTab" class="card" style="display:none;">
+            <h3 style="margin-top:0;">Check-In Scan Simulation</h3>
+            <p class="text-muted">Select your event, paste a ticket QR token, then Check In (consumes the ticket) or Preview (read-only).</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px;">
+                <select class="form-select" id="checkinEvent"></select>
+                <input id="checkinInput" class="form-control" placeholder="Paste QR token here..." style="grid-column:span 2;">
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <button class="btn-primary-custom" onclick="doCheckIn()">🎫 Check In (consume)</button>
+                <button class="btn-secondary-custom" onclick="previewToken()">👁 Preview (read-only)</button>
+            </div>
+            <div id="checkinResult"></div>
+        </div>
+
+        <!-- BOOKINGS -->
+        <div id="bookingsTab" class="card" style="display:none;">
+            <h3 style="margin-top:0;">Bookings</h3>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <select class="form-select" id="bookingEvent" onchange="loadEventBookings()" style="max-width:320px;"></select>
+                <button class="btn-secondary-custom" onclick="loadEventBookings()">Refresh</button>
+            </div>
+            <div id="eventBookings"></div>
+        </div>
+
+        <!-- TICKETS -->
+        <div id="ticketsTab" class="card" style="display:none;">
+            <h3 style="margin-top:0;">Issued Tickets</h3>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <select class="form-select" id="ticketEvent" onchange="loadEventTickets()" style="max-width:320px;"></select>
+                <button class="btn-secondary-custom" onclick="loadEventTickets()">Refresh</button>
+            </div>
+            <div id="eventTickets"></div>
+        </div>
+
+        <!-- HISTORY -->
+        <div id="historyTab" class="card" style="display:none;">
+            <h3 style="margin-top:0;">Check-In History</h3>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <select class="form-select" id="historyEvent" onchange="loadHistory()" style="max-width:320px;"></select>
+                <button class="btn-secondary-custom" onclick="loadHistory()">Refresh</button>
+            </div>
+            <div id="checkinHistory"></div>
+        </div>
+
+        <!-- ORGANIZERS -->
+        <div id="organizersTab" class="card" style="display:none;">
+            <h3 style="margin-top:0;">Organizers</h3>
+            <p class="text-muted">Update/delete requires your own access code. You can only modify your own profile.</p>
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Organization</th><th></th></tr></thead>
+                <tbody id="organizerRows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/organizer.js"></script>
+</body>
+</html>
