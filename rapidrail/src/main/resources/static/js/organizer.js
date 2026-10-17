@@ -30,12 +30,7 @@ async function organizerLogin() {
     await loginAs(email, code);
 }
 
-// One-click demo login (fills + submits, no typing).
-async function quickLogin(email, code) {
-    document.getElementById("orgEmail").value = email;
-    document.getElementById("orgCode").value = code;
-    await loginAs(email, code);
-}
+// Registration lives on organizer-register.html (separate page).
 
 async function loginAs(email, code) {
     try {
@@ -64,24 +59,7 @@ async function loginAs(email, code) {
     } catch (e) { alert("Server not reachable."); }
 }
 
-async function organizerRegister() {
-    const name = document.getElementById("newName").value.trim();
-    const org = document.getElementById("newOrg").value.trim();
-    const email = document.getElementById("newEmail").value.trim();
-    const code = document.getElementById("newCode").value;
-    if (!name || !org || !email || !code) return alert("All organizer fields are required");
-    const res = await fetch(`${API}/organizers`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, organizationName: org, email, accessCode: code })
-    });
-    const data = await res.json();
-    if (!res.ok) return alert("Registration failed: " + (data.error || "?"));
-    localStorage.setItem("organizerId", data.id);
-    localStorage.setItem("organizerName", data.organizationName);
-    localStorage.setItem("organizerCode", code);
-    showAlert("Organizer registered!", "success");
-    showPanel();
-}
+// Registration lives on organizer-register.html (separate page).
 
 function switchTab(tab) {
     document.querySelectorAll(".tab-bar button").forEach(b => b.classList.remove("active"));
@@ -251,10 +229,10 @@ async function loadEventBookings() {
     const bookings = await res.json();
     const div = document.getElementById("eventBookings");
     if (!bookings.length) { div.innerHTML = '<p class="text-muted">No bookings for this event yet.</p>'; return; }
-    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Booking</th><th>User</th><th>Qty</th><th>Amount</th><th>Time</th><th>Status</th></tr></thead>
+    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Booking</th><th>Attendee</th><th>Qty</th><th>Amount</th><th>Time</th><th>Status</th></tr></thead>
         <tbody>${bookings.map(b => `<tr>
             <td><code style="font-size:0.75rem;">${b.bookingId.substring(0, 8)}…</code></td>
-            <td>${escapeHtml(b.user ? b.user.username : "?")}</td>
+            <td>${escapeHtml(b.user ? b.user.username : "?")}<br><span class="text-muted" style="font-size:0.8rem;">${escapeHtml(b.user ? b.user.email : "")}</span></td>
             <td>${b.quantity}</td><td>₹${money(b.totalAmount)}</td>
             <td>${formatDateTime(b.bookingTime)}</td><td>${b.status}</td>
         </tr>`).join("")}</tbody></table></div>`;
@@ -267,13 +245,16 @@ async function loadEventTickets() {
     const tickets = await res.json();
     const div = document.getElementById("eventTickets");
     if (!tickets.length) { div.innerHTML = '<p class="text-muted">No tickets issued for this event yet.</p>'; return; }
-    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Ticket</th><th>QR Token</th><th>Booking</th><th>Status</th></tr></thead>
-        <tbody>${tickets.map(t => `<tr>
+    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Attendee</th><th>QR Token</th><th>Booking</th><th>Status</th></tr></thead>
+        <tbody>${tickets.map(t => {
+            const u = t.booking ? t.booking.user : null;
+            return `<tr>
             <td><code style="font-size:0.75rem;">${t.ticketId.substring(0, 8)}…</code></td>
+            <td>${escapeHtml(u ? u.username : "?")}<br><span class="text-muted" style="font-size:0.8rem;">${escapeHtml(u ? u.email : "")}</span></td>
             <td><code style="font-size:0.75rem;">${escapeHtml((t.qrToken || "").substring(0, 18))}…</code></td>
             <td><code style="font-size:0.75rem;">${(t.booking ? t.booking.bookingId : "").substring(0, 8)}…</code></td>
             <td>${t.status}</td>
-        </tr>`).join("")}</tbody></table></div>`;
+        </tr>`; }).join("")}</tbody></table></div>`;
 }
 
 async function loadHistory() {
@@ -283,12 +264,15 @@ async function loadHistory() {
     const rows = await res.json();
     const div = document.getElementById("checkinHistory");
     if (!rows.length) { div.innerHTML = '<p class="text-muted">No check-ins recorded for this event yet.</p>'; return; }
-    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>#</th><th>Ticket</th><th>Checked In At</th></tr></thead>
-        <tbody>${rows.map(r => `<tr>
+    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>#</th><th>Attendee</th><th>Ticket</th><th>Checked In At</th></tr></thead>
+        <tbody>${rows.map(r => {
+            const u = r.ticket && r.ticket.booking ? r.ticket.booking.user : null;
+            return `<tr>
             <td>${r.id}</td>
+            <td>${escapeHtml(u ? u.username : "?")}<br><span class="text-muted" style="font-size:0.8rem;">${escapeHtml(u ? u.email : "")}</span></td>
             <td><code style="font-size:0.75rem;">${escapeHtml(r.ticket ? r.ticket.qrToken : "?")}</code></td>
             <td>${formatDateTime(r.checkedInAt)}</td>
-        </tr>`).join("")}</tbody></table></div>`;
+        </tr>`; }).join("")}</tbody></table></div>`;
 }
 
 // ---------- ORGANIZERS ----------

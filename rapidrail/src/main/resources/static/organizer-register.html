@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventPass - Organizer Registration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-wrap">
+        <div class="auth-hero">
+            <h1>Event<em>Pass</em></h1>
+            <p style="font-size:1.1rem;font-weight:600;">for organizers</p>
+            <p>Register your organization to publish events, sell tickets and scan entries at the gate.</p>
+        </div>
+        <div class="auth-form">
+            <div class="card">
+                <h2 style="margin-top:0;">Register as organizer</h2>
+                <p class="text-muted" style="font-size:0.9rem;">Your access code is your password — keep it safe.</p>
+                <form id="orgRegisterForm">
+                    <div style="margin-bottom:12px;">
+                        <label class="text-muted" style="font-size:0.8rem;font-weight:600;">YOUR NAME</label>
+                        <input id="newName" class="form-control" required autocomplete="name">
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label class="text-muted" style="font-size:0.8rem;font-weight:600;">ORGANIZATION</label>
+                        <input id="newOrg" class="form-control" required autocomplete="organization">
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label class="text-muted" style="font-size:0.8rem;font-weight:600;">EMAIL</label>
+                        <input id="newEmail" type="email" class="form-control" required autocomplete="email">
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label class="text-muted" style="font-size:0.8rem;font-weight:600;">ACCESS CODE (MIN 4 CHARS)</label>
+                        <input id="newCode" type="password" class="form-control" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn-primary-custom" style="width:100%;">Register Organizer</button>
+                </form>
+                <p id="regError" style="color:var(--danger);display:none;margin-top:10px;"></p>
+                <p style="text-align:center;margin-top:16px;color:var(--muted);font-size:0.9rem;">
+                    Already registered? <a href="organizer.html" style="color:var(--accent);font-weight:600;text-decoration:none;">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        if (localStorage.getItem("organizerId") && localStorage.getItem("organizerCode")) {
+            window.location.href = "organizer.html";
+        }
+        document.getElementById("orgRegisterForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const err = document.getElementById("regError");
+            err.style.display = "none";
+            const body = {
+                name: document.getElementById("newName").value.trim(),
+                organizationName: document.getElementById("newOrg").value.trim(),
+                email: document.getElementById("newEmail").value.trim(),
+                accessCode: document.getElementById("newCode").value
+            };
+            try {
+                const res = await fetch(`${API}/organizers`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    err.innerText = data.error || "Registration failed";
+                    err.style.display = "block";
+                    return;
+                }
+                localStorage.setItem("organizerId", data.id);
+                localStorage.setItem("organizerName", data.organizationName);
+                localStorage.setItem("organizerCode", body.accessCode);
+                localStorage.setItem("isAdmin", "");
+                window.location.href = "organizer.html";
+            } catch (ex) {
+                err.innerText = "Server not reachable.";
+                err.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -97,14 +97,27 @@ for anything beyond demo.
 
 ## 5. First run — accounts & demo data
 
-Boot seeds **3 organizers** (access code `organizer123` for all) and **12 events**
-(4 concerts, 4 workshops, 2 seminars, 2 others, ₹99–₹1099):
+Boot seeds **4 logins** and **12 events**
+(4 concerts, 4 workshops, 2 seminars, 2 others). Login and registration are
+separate pages styled like the attendee login: `organizer.html` (sign-in only)
+and `organizer-register.html` (new organizers). No credentials are shown anywhere
+on screen; the logins below are documented here only:
 
-| Organizer login (organizer.html) | Org |
-|---|---|
-| `aarav@rhythmnights.in` / `organizer123` | Rhythm Nights |
-| `meera@skillHum.in` / `organizer123` | SkillHum Academy |
-| `kabir@cityarts.in` / `organizer123` | CityArts Collective |
+| Login (organizer.html) | Role | Can |
+|---|---|---|
+| `admin123@gmail.com` / `admin123` | **Site admin** | manage ANY event, check in for ANY event |
+| `aarav@rhythmnights.in` / `organizer123` | Organizer | own events only (Rhythm Nights) |
+| `meera@skillhum.in` / `organizer123` | Organizer | own events only (SkillHum Academy) |
+| `kabir@cityarts.in` / `organizer123` | Organizer | own events only (CityArts Collective) |
+
+Mini-RBAC, enforced server-side: an organizer editing/deleting another organizer's
+event gets 403, and cross-event check-ins report WRONG EVENT — except for the site
+admin, which bypasses ownership checks. Admin rights live only in code/DB seeds;
+no API endpoint can grant them. Attendees are separate (`/api/auth` users) and can
+never perform organizer actions.
+
+Organizers see their attending people: the Bookings, Tickets and History tabs all
+show each attendee's name + email.
 
 Attendees self-register on the home page and get a **₹500 wallet bonus**.
 

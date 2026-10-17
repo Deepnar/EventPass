@@ -12,39 +12,33 @@
             z-index: 100;
             display: flex; align-items: center; justify-content: center;
         }
-        .pin-card {
-            background: white; padding: 40px; border-radius: var(--radius);
-            max-width: 420px; width: 90%; text-align: center;
-        }
     </style>
 </head>
 <body>
     <!-- ORGANIZER LOGIN (verified server-side) -->
-    <div id="loginOverlay" class="pin-overlay">
-        <div class="pin-card">
-            <h2 style="margin-top:0;">Organizer Login</h2>
-            <p class="text-muted">Sign in with your organizer email + access code.<br>Demo code for seeded organizers: <code>organizer123</code></p>
-            <input id="orgEmail" type="email" class="form-control" placeholder="organizer email" style="margin:8px 0;">
-            <input id="orgCode" type="password" class="form-control" placeholder="access code" style="margin:8px 0 14px 0;">
-            <button class="btn-primary-custom" style="width:100%;" onclick="organizerLogin()">Sign In</button>
-            <p id="loginError" style="color:#dc2626;display:none;margin-top:10px;">Invalid credentials</p>
-            <div style="margin-top:14px;">
-                <p class="text-muted" style="font-size:0.82rem;margin:0 0 8px 0;">One-click demo logins:</p>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-                    <button class="btn-secondary-custom" style="padding:6px 12px;font-size:0.82rem;" onclick="quickLogin('admin@eventpass.in','admin123')">Site Admin</button>
-                    <button class="btn-secondary-custom" style="padding:6px 12px;font-size:0.82rem;" onclick="quickLogin('aarav@rhythmnights.in','organizer123')">Rhythm Nights</button>
-                    <button class="btn-secondary-custom" style="padding:6px 12px;font-size:0.82rem;" onclick="quickLogin('meera@skillhum.in','organizer123')">SkillHum</button>
+    <div id="loginOverlay" class="pin-overlay" style="background:var(--bg);">
+        <div class="auth-wrap" style="width:100%;">
+            <div class="auth-hero">
+                <h1>Event<em>Pass</em></h1>
+                <p style="font-size:1.1rem;font-weight:600;">for organizers</p>
+                <p>Create events, track bookings and tickets, and validate entry with QR check-in — all from one panel.</p>
+            </div>
+            <div class="auth-form">
+                <div class="card">
+                    <h2 style="margin-top:0;">Organizer Login</h2>
+                    <p class="text-muted" style="font-size:0.9rem;">Sign in with your organizer email and access code.</p>
+                    <input id="orgEmail" type="email" class="form-control" placeholder="organizer email" autocomplete="username" style="margin:8px 0;">
+                    <input id="orgCode" type="password" class="form-control" placeholder="access code" autocomplete="current-password" style="margin:8px 0 14px 0;" onkeydown="if(event.key==='Enter')organizerLogin()">
+                    <button class="btn-primary-custom" style="width:100%;" onclick="organizerLogin()">Sign In</button>
+                    <p id="loginError" style="color:var(--danger);display:none;margin-top:10px;">Invalid credentials</p>
+                    <p style="text-align:center;margin-top:16px;color:var(--muted);font-size:0.9rem;">
+                        New organizer? <a href="organizer-register.html" style="color:var(--accent);font-weight:600;text-decoration:none;">Register here</a>
+                    </p>
+                    <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+                        <a href="index.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">← Back to attendee login</a>
+                    </div>
                 </div>
             </div>
-            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;text-align:left;">
-                <strong style="font-size:0.9rem;">New organizer?</strong>
-                <input id="newName" class="form-control" placeholder="Your name" style="margin:8px 0;">
-                <input id="newOrg" class="form-control" placeholder="Organization name" style="margin:8px 0;">
-                <input id="newEmail" type="email" class="form-control" placeholder="Email" style="margin:8px 0;">
-                <input id="newCode" type="password" class="form-control" placeholder="Choose access code (min 4 chars)" style="margin:8px 0;">
-                <button class="btn-secondary-custom" style="width:100%;" onclick="organizerRegister()">Register Organizer</button>
-            </div>
-            <a href="index.html" style="display:block;margin-top:14px;color:var(--text-muted);text-decoration:none;font-size:0.85rem;">← Back to attendee login</a>
         </div>
     </div>
 

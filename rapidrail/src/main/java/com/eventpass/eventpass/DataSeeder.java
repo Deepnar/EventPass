@@ -31,8 +31,9 @@ public class DataSeeder {
             Organizer rhythm = ensureOrganizer(organizerRepo, "Aarav Sharma", "aarav@rhythmnights.in", "Rhythm Nights", "organizer123", false);
             Organizer skillHum = ensureOrganizer(organizerRepo, "Meera Iyer", "meera@skillhum.in", "SkillHum Academy", "organizer123", false);
             Organizer cityArts = ensureOrganizer(organizerRepo, "Kabir Rao", "kabir@cityarts.in", "CityArts Collective", "organizer123", false);
-            // Site admin: ready-made login with full event/check-in rights (code: admin123).
-            ensureOrganizer(organizerRepo, "Site Admin", "admin@eventpass.in", "EventPass", "admin123", true);
+            // Site admin login: admin123@gmail.com / admin123 (migrates the old seed address if present).
+            repoRename(organizerRepo, "admin@eventpass.in", "admin123@gmail.com");
+            ensureOrganizer(organizerRepo, "Site Admin", "admin123@gmail.com", "EventPass", "admin123", true);
 
             List<SeedEvent> seeds = List.of(
                 new SeedEvent("Monsoon Beats Concert", "Live indie concert under the monsoon sky. Gates open 1 hour early.",
@@ -92,6 +93,14 @@ public class DataSeeder {
                 eventRepo.save(e);
             }
         };
+    }
+
+    private void repoRename(OrganizerRepository repo, String oldEmail, String newEmail) {
+        var old = repo.findByEmail(oldEmail).orElse(null);
+        if (old != null && repo.findByEmail(newEmail).isEmpty()) {
+            old.setEmail(newEmail);
+            repo.save(old);
+        }
     }
 
     private Organizer ensureOrganizer(OrganizerRepository repo, String name, String email,
