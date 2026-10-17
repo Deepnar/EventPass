@@ -70,6 +70,12 @@ public class EventController {
         }
     }
 
+    // Recommended for a user: GET /api/events/recommended?userId= (optional)
+    @GetMapping("/recommended")
+    public List<Event> recommended(@RequestParam(required = false) Long userId) {
+        return eventService.getRecommended(userId);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id,
                                     @RequestBody Event event,

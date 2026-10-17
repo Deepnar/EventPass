@@ -50,6 +50,7 @@ Organizer 1───* Event 1───* Booking *───* Ticket 1───o C
 | `Organizer` | id, name, email (unique), organizationName, accessCodeHash (salted SHA-256, never serialized) |
 | `Event` | id, title, description, category (Concert/Workshop/Seminar/Other), venue, eventDateTime, ticketPrice (BigDecimal 10,2), totalCapacity, availableSeats, organizer (ManyToOne), `@Version` optimistic lock |
 | `User` | id, username (unique), password (salted hash), email, balance (BigDecimal 10,2) |
+| `Payment` | id, user (ManyToOne), amount (BigDecimal), razorpayOrderId (unique), razorpayPaymentId, signature, status (PENDING/COMPLETED/FAILED) — wallet top-ups only |
 | `Booking` | bookingId (UUID string PK), user (ManyToOne), event (ManyToOne), quantity, totalAmount (BigDecimal), bookingTime, status (CONFIRMED/CANCELLED) |
 | `Ticket` | ticketId (UUID PK), booking (ManyToOne), event (ManyToOne), qrToken (unique random UUID — the QR payload), status (VALID/USED/CANCELLED) |
 | `CheckIn` | id, ticket (OneToOne, unique — one entry per ticket), event, organizer, checkedInAt |
@@ -101,8 +102,42 @@ mvn spring-boot:run
 First boot downloads dependencies (30–60 s) and seeds 2 demo organizers + 5 events.
 Stop with `Ctrl+C`.
 
-Seeded organizers (both use access code `organizer123`):
-`aarav@rhythmnights.in` (Rhythm Nights) · `meera@skillHum.in` (SkillHum Academy)
+Seeded organizers (all use access code `organizer123`):
+`aarav@rhythmnights.in` (Rhythm Nights) · `meera@skillhum.in` (SkillHum Academy) · `kabir@cityarts.in` (CityArts Collective)
+
+12 seeded events across all 4 categories (4 concerts, 4 workshops, 2 seminars, 2 others),
+with staggered dates, prices (₹99–₹1099) and venues — enough to make browsing feel like an app.
+
+### Discovering events (browse / recommended)
+- `GET /api/events?upcoming=true` — future events, soonest first (the default browse view).
+- `GET /api/events?category=Concert` (+ `organizerId=`, `search=`) — classification filters.
+- `GET /api/events/recommended?userId=` — categories from your CONFIRMED bookings rank first,
+  everything else soonest-first; new users get soonest-upcoming. Simple, explainable, no ML.
+- The dashboard shows category pills with counts, a "✨ Recommended for you" strip,
+  an "Upcoming" grid, and 🔥 "Only N left!" urgency badges (≤10 seats).
+
+---
+
+## Payments — Razorpay wallet top-up (test mode, optional)
+
+Ported from the `rapidrail` project's payment flow (`/home/deepnar/Programs/rapidrail`),
+fixed to compile standalone (its pom omitted the SDK dep) and to use BigDecimal + JDK-only HMAC.
+
+- Bookings always spend the wallet; Razorpay is one way to add money (instant demo top-up stays as fallback).
+- `GET /api/payments/config` → `{enabled, keyId?}`. Without keys the Razorpay button hides itself.
+- `POST /api/payments/initiate {userId, amount}` → `{orderId, ...}` (creates live Razorpay order + PENDING row).
+- Browser opens Razorpay checkout.js → `POST /api/payments/verify {orderId, paymentId, signature}` →
+  signature checked, wallet credited **exactly once** (replays return COMPLETED without re-crediting).
+- `POST /api/payments/failure`, `GET /api/payments/status/{orderId}`, `GET /api/payments/history/{userId}`.
+
+Enable with your own test keys (never commit them):
+```bash
+export RAZORPAY_KEY_ID='rzp_test_...'
+export RAZORPAY_KEY_SECRET='...'
+cd rapidrail && mvn spring-boot:run
+```
+Verified live against Razorpay test mode (real `order_*` ID created, status PENDING). The browser
+checkout step (UPI/card form) is manual — signature math and idempotent credit are unit-tested.
 
 ---
 
@@ -205,11 +240,13 @@ Seeded organizers (both use access code `organizer123`):
 ## Tests
 
 ```bash
-cd rapidrail && mvn test   # 14 tests, H2 in-memory, MySQL not required
+cd rapidrail && mvn test   # 23 tests, H2 in-memory, MySQL not required
 ```
 - `BookingServiceTest` (5): valid booking + per-admission tickets, oversell rejected, insufficient balance rejected, past-event rejected, cancel restores seats/refund exactly once.
 - `CheckInServiceTest` (7): valid check-in + history, duplicate → ALREADY_USED, invalid token, wrong event, cancelled ticket, cancel-after-check-in blocked, preview is read-only.
 - `CrudAndAuthTest` (2): organizer CRUD with code auth, hashing, duplicate-email rejection.
+- `PaymentServiceTest` (6): HMAC verify true/tampered, complete credits once + replay-safe, bad signature → FAILED without credit, failure reason, history.
+- `RecommendationTest` (3): booked category ranks first, new/unknown users get soonest-upcoming.
 
 ## Limitations
 

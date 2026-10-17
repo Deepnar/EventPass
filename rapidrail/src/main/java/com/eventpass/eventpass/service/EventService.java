@@ -3,12 +3,17 @@ package com.eventpass.eventpass.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.eventpass.eventpass.entity.Booking;
 import com.eventpass.eventpass.entity.Event;
 import com.eventpass.eventpass.entity.Organizer;
 import com.eventpass.eventpass.repository.BookingRepository;
@@ -47,6 +52,35 @@ public class EventService {
 
     public List<Event> search(String title) {
         return eventRepository.findByTitleContainingIgnoreCase(title);
+    }
+
+    /**
+     * Simple recommendations: upcoming events ranked by the user's own booking
+     * history — categories they booked before come first (most-booked category
+     * first), then everything else soonest-first. New users (or no user) get
+     * plain soonest-upcoming. No ML, explainable in a viva.
+     */
+    @Transactional(readOnly = true)
+    public List<Event> getRecommended(Long userId) {
+        List<Event> upcoming = getUpcoming();
+        if (userId == null) return upcoming;
+        Set<String> preferred = new LinkedHashSet<>();
+        List<Booking> history = bookingRepository.findByUserIdOrderByBookingTimeDesc(userId);
+        for (Booking b : history) {
+            if ("CONFIRMED".equals(b.getStatus()) && b.getEvent() != null && b.getEvent().getCategory() != null) {
+                preferred.add(b.getEvent().getCategory());
+            }
+        }
+        if (preferred.isEmpty()) return upcoming;
+        List<String> rank = new ArrayList<>(preferred);
+        List<Event> sorted = new ArrayList<>(upcoming);
+        sorted.sort(Comparator
+                .comparingInt((Event e) -> {
+                    int i = rank.indexOf(e.getCategory());
+                    return i < 0 ? Integer.MAX_VALUE : i;
+                })
+                .thenComparing(Event::getEventDateTime));
+        return sorted;
     }
 
     @Transactional

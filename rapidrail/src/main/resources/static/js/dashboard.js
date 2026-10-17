@@ -2,6 +2,8 @@
 const userId = requireLogin();
 
 let allEvents = [];
+let recommended = [];
+let activeCategory = "";
 let currentEvent = null;
 
 if (!userId) {
@@ -10,6 +12,7 @@ if (!userId) {
     document.getElementById("welcomeUser").innerText = "Hi, " + (localStorage.getItem("username") || "user");
     updateWallet();
     loadEvents();
+    loadRecommended();
     loadBookings();
 }
 
@@ -32,34 +35,15 @@ async function updateWallet() {
     } catch (e) { console.error(e); }
 }
 
-async function rechargePrompt() {
-    const amt = prompt("Enter amount to add to wallet (₹):", "500");
-    if (!amt) return;
-    const amount = parseFloat(amt);
-    if (!amount || amount <= 0) return alert("Invalid amount");
-    try {
-        const res = await fetch(`${API}/users/${userId}/recharge`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount })
-        });
-        if (res.ok) {
-            const user = await res.json();
-            document.getElementById("walletBalance").innerText = money(user.balance);
-            showAlert(`₹${amount} added to wallet!`, "success");
-        } else {
-            const err = await res.json();
-            alert("Recharge failed: " + (err.error || "Unknown error"));
-        }
-    } catch (e) { alert("Network error"); }
-}
+// rechargePrompt() lives in payment.js (modal with Razorpay + demo top-up).
 
 async function loadEvents() {
     try {
-        const res = await fetch(`${API}/events`);
+        const res = await fetch(`${API}/events?upcoming=true`);
         allEvents = await res.json();
         // soonest first
         allEvents.sort((a, b) => new Date(a.eventDateTime) - new Date(b.eventDateTime));
+        renderPills();
         renderEvents();
     } catch (e) {
         console.error(e);
@@ -67,12 +51,50 @@ async function loadEvents() {
     }
 }
 
+async function loadRecommended() {
+    try {
+        const res = await fetch(`${API}/events/recommended?userId=${userId}`);
+        recommended = await res.json();
+        const section = document.getElementById("recommendedSection");
+        if (!recommended.length) { section.style.display = "none"; return; }
+        section.style.display = "block";
+        document.getElementById("recommendedStrip").innerHTML = recommended.slice(0, 6).map(ev => `
+            <div class="event-card js-event-card" data-event-id="${ev.id}" style="min-width:230px;max-width:230px;cursor:pointer;">
+                <div class="poster" style="height:120px;font-size:2rem;">${escapeHtml((ev.title || "?").charAt(0).toUpperCase())}</div>
+                <div class="body">
+                    <h5>${escapeHtml(ev.title)}</h5>
+                    <div class="meta"><span class="badge-genre">${escapeHtml(ev.category)}</span></div>
+                    <div class="meta" style="font-size:0.8rem;">📅 ${formatDateTime(ev.eventDateTime)}</div>
+                    <div class="price">₹${money(ev.ticketPrice)}</div>
+                </div>
+            </div>`).join("");
+        document.querySelectorAll("#recommendedStrip .js-event-card").forEach(card => {
+            card.addEventListener("click", () => openBookingById(card.dataset.eventId));
+        });
+    } catch (e) { console.error(e); }
+}
+
+function renderPills() {
+    const cats = ["", "Concert", "Workshop", "Seminar", "Other"];
+    const counts = {};
+    allEvents.forEach(ev => { counts[ev.category] = (counts[ev.category] || 0) + 1; });
+    document.getElementById("categoryPills").innerHTML = cats.map(c => {
+        const n = c === "" ? allEvents.length : (counts[c] || 0);
+        const label = c === "" ? "All" : c;
+        const active = activeCategory === c;
+        return `<button class="${active ? "btn-primary-custom" : "btn-secondary-custom"} js-pill"
+            data-cat="${c}" style="padding:6px 16px;font-size:0.85rem;">${label} (${n})</button>`;
+    }).join("");
+    document.querySelectorAll(".js-pill").forEach(btn => {
+        btn.addEventListener("click", () => { activeCategory = btn.dataset.cat; renderPills(); renderEvents(); });
+    });
+}
+
 function renderEvents() {
     const search = document.getElementById("searchBox").value.toLowerCase();
-    const category = document.getElementById("categoryFilter").value;
     const filtered = allEvents.filter(ev =>
         (!search || (ev.title || "").toLowerCase().includes(search) || (ev.venue || "").toLowerCase().includes(search)) &&
-        (!category || ev.category === category)
+        (!activeCategory || ev.category === activeCategory)
     );
 
     const grid = document.getElementById("eventGrid");
@@ -83,6 +105,7 @@ function renderEvents() {
     grid.innerHTML = filtered.map(ev => {
         const soldOut = (ev.availableSeats || 0) <= 0;
         const past = ev.eventDateTime && new Date(ev.eventDateTime) < new Date();
+        const urgent = !soldOut && !past && ev.availableSeats <= 10;
         return `
         <div class="event-card js-event-card" data-event-id="${ev.id}">
             <div class="poster">${escapeHtml((ev.title || "?").charAt(0).toUpperCase())}</div>
@@ -95,8 +118,8 @@ function renderEvents() {
                 <div class="meta" style="font-size:0.8rem;">📅 ${formatDateTime(ev.eventDateTime)}</div>
                 <div class="meta" style="font-size:0.8rem;">🎪 ${escapeHtml(ev.organizer ? ev.organizer.organizationName : "")}</div>
                 <div class="price">₹${money(ev.ticketPrice)} <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);">/ ticket</span></div>
-                <div style="font-size:0.85rem;margin-top:4px;color:${soldOut || past ? "#b91c1c" : "#065f46"};font-weight:600;">
-                    ${past ? "Event ended" : (soldOut ? "Sold out" : ev.availableSeats + " seats left")}
+                <div style="font-size:0.85rem;margin-top:4px;color:${soldOut || past ? "#b91c1c" : (urgent ? "#e65100" : "#065f46")};font-weight:600;">
+                    ${past ? "Event ended" : (soldOut ? "Sold out" : (urgent ? `🔥 Only ${ev.availableSeats} left!` : ev.availableSeats + " seats left"))}
                 </div>
             </div>
         </div>`;

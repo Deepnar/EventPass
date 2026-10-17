@@ -28,21 +28,14 @@
 
         <!-- Browse tab -->
         <div id="browseTab">
-            <div style="display:flex;gap:12px;align-items:end;margin-bottom:18px;flex-wrap:wrap;">
-                <div style="flex:1;min-width:200px;">
-                    <label class="text-muted" style="font-size:0.8rem;font-weight:600;">SEARCH</label>
-                    <input id="searchBox" class="form-control" placeholder="Search by title or venue..." oninput="renderEvents()">
-                </div>
-                <div style="min-width:160px;">
-                    <label class="text-muted" style="font-size:0.8rem;font-weight:600;">CATEGORY</label>
-                    <select id="categoryFilter" class="form-select" onchange="renderEvents()">
-                        <option value="">All</option>
-                        <option value="Concert">Concert</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Seminar">Seminar</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
+            <div id="recommendedSection" style="display:none;margin-bottom:22px;">
+                <h3 style="margin:0 0 10px 0;">✨ Recommended for you</h3>
+                <div id="recommendedStrip" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;"></div>
+            </div>
+            <h3 style="margin:0 0 10px 0;">📅 Upcoming events</h3>
+            <div id="categoryPills" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;"></div>
+            <div style="margin-bottom:18px;">
+                <input id="searchBox" class="form-control" style="max-width:340px;" placeholder="Search by title or venue..." oninput="renderEvents()">
             </div>
             <div id="eventGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;"></div>
         </div>
@@ -85,7 +78,30 @@
         </div>
     </div>
 
+    <!-- Wallet recharge modal -->
+    <div id="rechargeModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">💰 Add Money</h3>
+            <div style="margin-bottom:14px;">
+                <label class="text-muted" style="font-size:0.85rem;font-weight:600;">AMOUNT (₹)</label>
+                <input id="rechargeAmount" type="number" class="form-control" min="1" value="500">
+            </div>
+            <div id="razorpayRow" style="display:none;margin-bottom:10px;">
+                <button class="btn-primary-custom" style="width:100%;" onclick="payWithRazorpay()">Pay with Razorpay (UPI / card)</button>
+            </div>
+            <button class="btn-secondary-custom" style="width:100%;" onclick="demoTopUp()">Instant demo top-up</button>
+            <div style="margin-top:16px;">
+                <h4 style="margin:0 0 8px 0;">Recent top-ups</h4>
+                <div id="topupHistory" class="text-muted" style="font-size:0.85rem;">—</div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+                <button class="btn-secondary-custom" onclick="closeRechargeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/common.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/payment.js"></script>
 </body>
 </html>
