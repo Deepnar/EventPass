@@ -63,6 +63,14 @@ else
     -p 3306:3306 mysql:8.0 > /dev/null
 fi
 
+if (echo > /dev/tcp/localhost/8081) 2>/dev/null; then
+  echo "ERROR: port 8081 is already in use — another EventPass is still running."
+  echo "mvn spring-boot:run forks TWO JVMs (Maven parent + app); kill BOTH:"
+  ps -e -o pid,args | grep -E "spring-boot:run|EventPassApplication" | grep -v grep | awk '{print "  kill "$1"  ("$NF")"}'
+  echo "Then run ./start.sh again."
+  exit 1
+fi
+
 echo "Waiting for MySQL on localhost:3306..."
 for i in $(seq 1 40); do
   # Real login check (TCP-open alone fires while mysqld is still initializing).
