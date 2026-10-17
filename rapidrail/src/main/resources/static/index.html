@@ -4,59 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventPass - Local Event Tickets</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="card" style="max-width:440px;margin:80px auto;">
-        <div style="text-align:center;margin-bottom:20px;">
-            <h1 style="margin:0;font-size:1.8rem;">🎟️ EventPass</h1>
-            <p class="text-muted" style="margin:6px 0 0 0;">Local Event Ticket Booking</p>
+    <div class="auth-wrap">
+        <div class="auth-hero">
+            <h1>Event<em>Pass</em></h1>
+            <p>Concerts, workshops, seminars and more around you. Book in seconds, walk in with a QR scan.</p>
+            <div class="poster-row">
+                <img src="img/posters/monsoon-beats.svg" alt="Concert poster">
+                <img src="img/posters/pottery-workshop.svg" alt="Workshop poster">
+                <img src="img/posters/comedy-open-mic.svg" alt="Comedy poster">
+            </div>
         </div>
+        <div class="auth-form">
+            <div class="card">
+                <div id="registerSection">
+                    <h3 style="margin-top:0;">Create account</h3>
+                    <p class="text-muted" style="font-size:0.85rem;margin-top:-4px;">Get a ₹500 wallet bonus on signup.</p>
+                    <form id="registerForm">
+                        <div style="margin-bottom:14px;">
+                            <label class="text-muted" style="font-size:0.8rem;font-weight:600;">USERNAME</label>
+                            <input type="text" id="regUser" class="form-control" required autocomplete="username">
+                        </div>
+                        <div style="margin-bottom:14px;">
+                            <label class="text-muted" style="font-size:0.8rem;font-weight:600;">EMAIL</label>
+                            <input type="email" id="regEmail" class="form-control" required autocomplete="email">
+                        </div>
+                        <div style="margin-bottom:18px;">
+                            <label class="text-muted" style="font-size:0.8rem;font-weight:600;">PASSWORD</label>
+                            <input type="password" id="regPass" class="form-control" required autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn-primary-custom" style="width:100%;">Create Account</button>
+                    </form>
+                    <p style="text-align:center;margin-top:18px;color:var(--muted);font-size:0.9rem;">
+                        Already have an account? <a href="#" onclick="toggleAuth();return false;" style="color:var(--accent);font-weight:600;text-decoration:none;">Sign in</a>
+                    </p>
+                </div>
 
-        <div id="registerSection">
-            <h3 style="margin-top:0;">Create Account</h3>
-            <p style="color:var(--text-muted);font-size:0.85rem;margin-top:-4px;">Get a ₹500 wallet bonus on signup.</p>
-            <form id="registerForm">
-                <div style="margin-bottom:14px;">
-                    <label class="text-muted" style="font-size:0.85rem;font-weight:600;">USERNAME</label>
-                    <input type="text" id="regUser" class="form-control" required>
+                <div id="loginSection" style="display:none;">
+                    <h3 style="margin-top:0;">Sign in</h3>
+                    <form id="loginForm">
+                        <div style="margin-bottom:14px;">
+                            <label class="text-muted" style="font-size:0.8rem;font-weight:600;">USERNAME</label>
+                            <input type="text" id="loginUser" class="form-control" required autocomplete="username">
+                        </div>
+                        <div style="margin-bottom:18px;">
+                            <label class="text-muted" style="font-size:0.8rem;font-weight:600;">PASSWORD</label>
+                            <input type="password" id="loginPass" class="form-control" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn-primary-custom" style="width:100%;">Sign In</button>
+                    </form>
+                    <p style="text-align:center;margin-top:18px;color:var(--muted);font-size:0.9rem;">
+                        No account? <a href="#" onclick="toggleAuth();return false;" style="color:var(--accent);font-weight:600;text-decoration:none;">Create one</a>
+                    </p>
                 </div>
-                <div style="margin-bottom:14px;">
-                    <label class="text-muted" style="font-size:0.85rem;font-weight:600;">EMAIL</label>
-                    <input type="email" id="regEmail" class="form-control" required>
-                </div>
-                <div style="margin-bottom:18px;">
-                    <label class="text-muted" style="font-size:0.85rem;font-weight:600;">PASSWORD</label>
-                    <input type="password" id="regPass" class="form-control" required>
-                </div>
-                <button type="submit" class="btn-primary-custom" style="width:100%;">Create Account</button>
-            </form>
-            <p style="text-align:center;margin-top:18px;color:var(--text-muted);font-size:0.9rem;">
-                Already have an account? <a href="#" onclick="toggleAuth();return false;" style="color:var(--primary);font-weight:600;text-decoration:none;">Sign in</a>
-            </p>
-        </div>
 
-        <div id="loginSection" style="display:none;">
-            <h3 style="margin-top:0;">Sign In</h3>
-            <form id="loginForm">
-                <div style="margin-bottom:14px;">
-                    <label class="text-muted" style="font-size:0.85rem;font-weight:600;">USERNAME</label>
-                    <input type="text" id="loginUser" class="form-control" required>
+                <div style="text-align:center;margin-top:20px;padding-top:18px;border-top:1px solid var(--border);">
+                    <a href="organizer.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Organizer Panel</a>
                 </div>
-                <div style="margin-bottom:18px;">
-                    <label class="text-muted" style="font-size:0.85rem;font-weight:600;">PASSWORD</label>
-                    <input type="password" id="loginPass" class="form-control" required>
-                </div>
-                <button type="submit" class="btn-primary-custom" style="width:100%;">Sign In</button>
-            </form>
-            <p style="text-align:center;margin-top:18px;color:var(--text-muted);font-size:0.9rem;">
-                No account? <a href="#" onclick="toggleAuth();return false;" style="color:var(--primary);font-weight:600;text-decoration:none;">Create one</a>
-            </p>
-        </div>
-
-        <div style="text-align:center;margin-top:20px;padding-top:18px;border-top:1px solid #e2e8f0;">
-            <a href="organizer.html" style="color:var(--text-muted);font-size:0.85rem;text-decoration:none;">🎪 Organizer Panel</a>
+            </div>
         </div>
     </div>
 

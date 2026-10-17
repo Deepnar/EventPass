@@ -59,12 +59,12 @@ async function loadRecommended() {
         if (!recommended.length) { section.style.display = "none"; return; }
         section.style.display = "block";
         document.getElementById("recommendedStrip").innerHTML = recommended.slice(0, 6).map(ev => `
-            <div class="event-card js-event-card" data-event-id="${ev.id}" style="min-width:230px;max-width:230px;cursor:pointer;">
-                <div class="poster" style="height:120px;font-size:2rem;">${escapeHtml((ev.title || "?").charAt(0).toUpperCase())}</div>
+            <div class="event-card js-event-card" data-event-id="${ev.id}">
+                ${posterHtml(ev)}
                 <div class="body">
                     <h5>${escapeHtml(ev.title)}</h5>
-                    <div class="meta"><span class="badge-genre">${escapeHtml(ev.category)}</span></div>
-                    <div class="meta" style="font-size:0.8rem;">📅 ${formatDateTime(ev.eventDateTime)}</div>
+                    <div class="meta"><span class="badge-genre badge-${escapeHtml(ev.category)}">${escapeHtml(ev.category)}</span></div>
+                    <div class="meta">${ICONS.calendar} ${formatDateTime(ev.eventDateTime)}</div>
                     <div class="price">₹${money(ev.ticketPrice)}</div>
                 </div>
             </div>`).join("");
@@ -82,8 +82,8 @@ function renderPills() {
         const n = c === "" ? allEvents.length : (counts[c] || 0);
         const label = c === "" ? "All" : c;
         const active = activeCategory === c;
-        return `<button class="${active ? "btn-primary-custom" : "btn-secondary-custom"} js-pill"
-            data-cat="${c}" style="padding:6px 16px;font-size:0.85rem;">${label} (${n})</button>`;
+        return `<button class="pill${active ? " active" : ""} js-pill"
+            data-cat="${c}">${label} (${n})</button>`;
     }).join("");
     document.querySelectorAll(".js-pill").forEach(btn => {
         btn.addEventListener("click", () => { activeCategory = btn.dataset.cat; renderPills(); renderEvents(); });
@@ -103,24 +103,19 @@ function renderEvents() {
         return;
     }
     grid.innerHTML = filtered.map(ev => {
-        const soldOut = (ev.availableSeats || 0) <= 0;
-        const past = ev.eventDateTime && new Date(ev.eventDateTime) < new Date();
-        const urgent = !soldOut && !past && ev.availableSeats <= 10;
         return `
         <div class="event-card js-event-card" data-event-id="${ev.id}">
-            <div class="poster">${escapeHtml((ev.title || "?").charAt(0).toUpperCase())}</div>
+            ${posterHtml(ev)}
             <div class="body">
                 <h5>${escapeHtml(ev.title)}</h5>
                 <div class="meta">
-                    <span class="badge-genre">${escapeHtml(ev.category)}</span>
-                    <span>${escapeHtml(ev.venue)}</span>
+                    <span class="badge-genre badge-${escapeHtml(ev.category)}">${escapeHtml(ev.category)}</span>
+                    <span>${ICONS.pin} ${escapeHtml(ev.venue)}</span>
                 </div>
-                <div class="meta" style="font-size:0.8rem;">📅 ${formatDateTime(ev.eventDateTime)}</div>
-                <div class="meta" style="font-size:0.8rem;">🎪 ${escapeHtml(ev.organizer ? ev.organizer.organizationName : "")}</div>
-                <div class="price">₹${money(ev.ticketPrice)} <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);">/ ticket</span></div>
-                <div style="font-size:0.85rem;margin-top:4px;color:${soldOut || past ? "#b91c1c" : (urgent ? "#e65100" : "#065f46")};font-weight:600;">
-                    ${past ? "Event ended" : (soldOut ? "Sold out" : (urgent ? `🔥 Only ${ev.availableSeats} left!` : ev.availableSeats + " seats left"))}
-                </div>
+                <div class="meta">${ICONS.calendar} ${formatDateTime(ev.eventDateTime)}</div>
+                <div class="meta">${ICONS.tent} ${escapeHtml(ev.organizer ? ev.organizer.organizationName : "")}</div>
+                <div class="price">₹${money(ev.ticketPrice)} <span style="font-size:0.8rem;font-weight:400;color:var(--muted);">/ ticket</span></div>
+                ${seatNoteHtml(ev)}
             </div>
         </div>`;
     }).join("");
@@ -141,7 +136,7 @@ function openBooking(ev) {
     document.getElementById("modalEventInfo").innerHTML = `
         <strong>${escapeHtml(ev.title)}</strong>
         <div class="text-muted" style="font-size:0.85rem;">${escapeHtml(ev.category)} · ${escapeHtml(ev.venue)}</div>
-        <div class="text-muted" style="font-size:0.85rem;">📅 ${formatDateTime(ev.eventDateTime)}</div>
+        <div class="text-muted" style="font-size:0.85rem;display:flex;align-items:center;gap:6px;">${ICONS.calendar} ${formatDateTime(ev.eventDateTime)}</div>
         <div class="text-muted" style="font-size:0.85rem;">${escapeHtml(ev.description || "")}</div>
         <div style="font-weight:600;color:var(--primary);margin-top:6px;">₹${money(ev.ticketPrice)} per ticket · ${ev.availableSeats} left</div>
         ${past ? '<div style="color:#b91c1c;font-weight:600;">This event has ended.</div>' : ''}
@@ -216,7 +211,7 @@ async function loadBookings() {
             div.innerHTML = '<p class="text-muted">No bookings yet. Browse events to book your first ticket!</p>';
             return;
         }
-        let html = `<table>
+        let html = `<div class="table-wrap"><table>
             <thead><tr><th>Event</th><th>Date</th><th>Qty</th><th>Amount</th><th>Status</th><th></th></tr></thead>
             <tbody>`;
         for (const b of bookings) {
@@ -227,14 +222,14 @@ async function loadBookings() {
                 <td>${formatDateTime(ev.eventDateTime)}</td>
                 <td>${b.quantity}</td>
                 <td>₹${money(b.totalAmount)}</td>
-                <td><span class="badge-genre" style="background:${isConfirmed ? '#d1fae5' : '#fee2e2'};color:${isConfirmed ? '#065f46' : '#991b1b'};">${b.status}</span></td>
+                <td><span class="badge-status ${isConfirmed ? 'ok' : 'bad'}">${b.status}</span></td>
                 <td style="white-space:nowrap;">
                     <button class="btn-secondary-custom js-view-qr" style="padding:4px 10px;font-size:0.85rem;" data-bid="${b.bookingId}">Tickets</button>
                     ${isConfirmed ? `<button class="btn-danger-custom js-cancel-booking" style="padding:4px 10px;font-size:0.85rem;" data-bid="${b.bookingId}">Cancel</button>` : ''}
                 </td>
             </tr>`;
         }
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         div.innerHTML = html;
 
         div.querySelectorAll('.js-view-qr').forEach(btn => {

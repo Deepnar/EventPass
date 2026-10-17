@@ -23,7 +23,7 @@ import com.eventpass.eventpass.util.PasswordUtil;
 public class DataSeeder {
 
     private record SeedEvent(String title, String desc, String category, String venue,
-                             int daysOut, int hour, int minute, String price, int capacity) {}
+                             int daysOut, int hour, int minute, String price, int capacity, String poster) {}
 
     @Bean
     CommandLineRunner seed(OrganizerRepository organizerRepo, EventRepository eventRepo) {
@@ -34,29 +34,29 @@ public class DataSeeder {
 
             List<SeedEvent> seeds = List.of(
                 new SeedEvent("Monsoon Beats Concert", "Live indie concert under the monsoon sky. Gates open 1 hour early.",
-                        "Concert", "Phoenix Grounds, Mumbai", 3, 19, 0, "499.00", 200),
+                        "Concert", "Phoenix Grounds, Mumbai", 3, 19, 0, "499.00", 200, "/img/posters/monsoon-beats.svg"),
                 new SeedEvent("Jazz by the Lake", "Evening jazz ensemble with food stalls and sunset views.",
-                        "Concert", "Powai Lakefront", 10, 18, 30, "349.00", 120),
+                        "Concert", "Powai Lakefront", 10, 18, 30, "349.00", 120, "/img/posters/jazz-by-the-lake.svg"),
                 new SeedEvent("Sufi Night Unplugged", "An intimate acoustic sufi evening with chai and stars.",
-                        "Concert", "Amphitheatre, Juhu", 15, 20, 0, "299.00", 150),
+                        "Concert", "Amphitheatre, Juhu", 15, 20, 0, "299.00", 150, "/img/posters/sufi-night.svg"),
                 new SeedEvent("Rock the Fort", "Local rock bands battle it out at the historic fort gates.",
-                        "Concert", "Vasai Fort Grounds", 21, 17, 0, "399.00", 300),
+                        "Concert", "Vasai Fort Grounds", 21, 17, 0, "399.00", 300, "/img/posters/rock-the-fort.svg"),
                 new SeedEvent("Pottery Workshop", "Beginner-friendly clay workshop. All materials included, take your pot home.",
-                        "Workshop", "Kala Studio, Bandra", 5, 11, 0, "899.00", 40),
+                        "Workshop", "Kala Studio, Bandra", 5, 11, 0, "899.00", 40, "/img/posters/pottery-workshop.svg"),
                 new SeedEvent("Python for Beginners", "Hands-on coding workshop. Bring a laptop; no experience needed.",
-                        "Workshop", "City Library Hall, Thane", 12, 10, 0, "299.00", 60),
+                        "Workshop", "City Library Hall, Thane", 12, 10, 0, "299.00", 60, "/img/posters/python-beginners.svg"),
                 new SeedEvent("Street Photography Walk", "Guided photo walk through old-city lanes. Any camera works, phones welcome.",
-                        "Workshop", "CST Heritage Precinct", 8, 7, 30, "249.00", 25),
+                        "Workshop", "CST Heritage Precinct", 8, 7, 30, "249.00", 25, "/img/posters/photo-walk.svg"),
                 new SeedEvent("Baking Basics Masterclass", "Bake your first sourdough and take-home dessert box. Aprons provided.",
-                        "Workshop", "Crumb & Co., Powai", 17, 14, 0, "1099.00", 30),
+                        "Workshop", "Crumb & Co., Powai", 17, 14, 0, "1099.00", 30, "/img/posters/baking-masterclass.svg"),
                 new SeedEvent("Startup Funding Seminar", "Local founders and angels on raising your first round. Q&A included.",
-                        "Seminar", "Innovation Hub, Andheri", 7, 15, 0, "199.00", 150),
+                        "Seminar", "Innovation Hub, Andheri", 7, 15, 0, "199.00", 150, "/img/posters/startup-seminar.svg"),
                 new SeedEvent("Personal Finance 101", "Budgeting, index funds and tax-saving for first-time earners.",
-                        "Seminar", "Community Hall, Mulund", 13, 11, 0, "149.00", 100),
+                        "Seminar", "Community Hall, Mulund", 13, 11, 0, "149.00", 100, "/img/posters/finance-101.svg"),
                 new SeedEvent("Comedy Open Mic Night", "Ten comics, one mic, zero mercy. Audience vote picks the winner.",
-                        "Other", "Laugh Loft, Versova", 6, 20, 30, "249.00", 80),
+                        "Other", "Laugh Loft, Versova", 6, 20, 30, "249.00", 80, "/img/posters/comedy-open-mic.svg"),
                 new SeedEvent("Sunday Flea & Food Fest", "60+ stalls: thrift, vinyl, street food and live buskers all day.",
-                        "Other", "Mhada Grounds, Malad", 19, 12, 0, "99.00", 500)
+                        "Other", "Mhada Grounds, Malad", 19, 12, 0, "99.00", 500, "/img/posters/flea-food-fest.svg")
             );
 
             Organizer[] owners = { rhythm, rhythm, rhythm, rhythm,
@@ -67,8 +67,14 @@ public class DataSeeder {
             LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
             for (int i = 0; i < seeds.size(); i++) {
                 SeedEvent s = seeds.get(i);
-                boolean already = existing.stream().anyMatch(e -> s.title().equalsIgnoreCase(e.getTitle()));
-                if (already) continue;
+                var dupe = existing.stream().filter(e -> s.title().equalsIgnoreCase(e.getTitle())).findFirst();
+                if (dupe.isPresent()) {
+                    if (dupe.get().getImageUrl() == null || dupe.get().getImageUrl().isBlank()) {
+                        dupe.get().setImageUrl(s.poster());
+                        eventRepo.save(dupe.get());
+                    }
+                    continue;
+                }
                 Event e = new Event();
                 e.setTitle(s.title());
                 e.setDescription(s.desc());
@@ -79,6 +85,7 @@ public class DataSeeder {
                 e.setTotalCapacity(s.capacity());
                 e.setAvailableSeats(s.capacity());
                 e.setOrganizer(owners[i]);
+                e.setImageUrl(s.poster());
                 eventRepo.save(e);
             }
         };

@@ -107,6 +107,8 @@ Seeded organizers (all use access code `organizer123`):
 
 12 seeded events across all 4 categories (4 concerts, 4 workshops, 2 seminars, 2 others),
 with staggered dates, prices (₹99–₹1099) and venues — enough to make browsing feel like an app.
+Each event has a poster image (`Event.imageUrl`, local `/img/posters/*.svg` by default,
+overridable per event by organizers); cards render the image with a gradient fallback.
 
 ### Discovering events (browse / recommended)
 - `GET /api/events?upcoming=true` — future events, soonest first (the default browse view).
@@ -135,9 +137,14 @@ Enable with your own test keys (never commit them):
 export RAZORPAY_KEY_ID='rzp_test_...'
 export RAZORPAY_KEY_SECRET='...'
 cd rapidrail && mvn spring-boot:run
+# or: RAZORPAY_KEY_ID='...' RAZORPAY_KEY_SECRET='...' ./start.sh
 ```
 Verified live against Razorpay test mode (real `order_*` ID created, status PENDING). The browser
 checkout step (UPI/card form) is manual — signature math and idempotent credit are unit-tested.
+
+If the Razorpay button doesn't appear: the backend had no keys at boot (`GET /api/payments/config`
+→ `{"enabled":false}`) and the recharge dialog says so — restart with the env vars set.
+`./start.sh` forwards them automatically when present.
 
 ---
 
@@ -247,6 +254,15 @@ cd rapidrail && mvn test   # 23 tests, H2 in-memory, MySQL not required
 - `CrudAndAuthTest` (2): organizer CRUD with code auth, hashing, duplicate-email rejection.
 - `PaymentServiceTest` (6): HMAC verify true/tampered, complete credits once + replay-safe, bad signature → FAILED without credit, failure reason, history.
 - `RecommendationTest` (3): booked category ranks first, new/unknown users get soonest-upcoming.
+- `CrudAndAuthTest` (3): organizer CRUD + hashing + duplicate-email + event poster round-trip.
+
+## UI theme (ui-ux-pro-max)
+
+Dark vibrant entertainment theme: slate surfaces, green CTA, per-category badge hues
+(Concert violet / Workshop amber / Seminar sky / Other teal), Inter + Playfair Display,
+hero with search, category pills with counts, scroll-snap recommendations, hover lift,
+visible focus rings, `prefers-reduced-motion` support, responsive down to 375px,
+SVG icon set (no structural emoji), tables scroll horizontally on small screens.
 
 ## Limitations
 

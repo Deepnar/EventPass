@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventPass - Browse Events</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <nav class="navbar-custom">
         <div style="display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;">
-            <a href="dashboard.html" class="navbar-brand">🎟️ EventPass</a>
-            <div style="display:flex;align-items:center;gap:14px;">
-                <span class="wallet-pill">₹ <span id="walletBalance">0</span></span>
-                <button onclick="rechargePrompt()" class="btn-secondary-custom" style="padding:6px 14px;">+ Add Money</button>
+            <a href="dashboard.html" class="navbar-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z"/><path d="M13 5v2m0 4v2m0 4v2"/></svg>EventPass</a>
+            <div class="nav-actions">
+                <span class="wallet-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 7H5a2 2 0 0 1 0-4h14v4"/><path d="M20 7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><circle cx="17" cy="14" r="1" fill="currentColor"/></svg>₹ <span id="walletBalance">0</span></span>
+                <button onclick="rechargePrompt()" class="btn-secondary-custom" style="padding:7px 14px;">+ Add Money</button>
                 <span class="text-white" id="welcomeUser" style="font-size:0.9rem;"></span>
                 <button onclick="logout()" class="btn-danger-custom">Logout</button>
             </div>
@@ -21,23 +21,32 @@
     </nav>
 
     <div style="max-width:1200px;margin:24px auto;padding:0 20px;">
+        <div class="hero">
+            <h1>Find your next <em>night out</em></h1>
+            <p>Concerts, workshops, seminars and more — book in seconds, enter with a QR scan.</p>
+            <div class="hero-search">
+                <input id="heroSearch" class="form-control" placeholder="Search events or venues..." oninput="document.getElementById('searchBox').value=this.value;renderEvents()">
+                <button class="btn-primary-custom" onclick="document.getElementById('eventGrid').scrollIntoView({behavior:'smooth'})">Explore</button>
+            </div>
+        </div>
+
         <div class="tab-bar">
-            <button class="active" data-tab="browse" onclick="switchTab('browse')">🎪 Browse Events</button>
-            <button data-tab="bookings" onclick="switchTab('bookings')">🎫 My Bookings</button>
+            <button class="active" data-tab="browse" onclick="switchTab('browse')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3z"/><path d="M12 12v8"/></svg>Browse Events</button>
+            <button data-tab="bookings" onclick="switchTab('bookings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z"/><path d="M13 5v2m0 4v2m0 4v2"/></svg>My Bookings</button>
         </div>
 
         <!-- Browse tab -->
         <div id="browseTab">
-            <div id="recommendedSection" style="display:none;margin-bottom:22px;">
-                <h3 style="margin:0 0 10px 0;">✨ Recommended for you</h3>
-                <div id="recommendedStrip" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;"></div>
+            <div id="recommendedSection" style="display:none;margin-bottom:32px;">
+                <h3 class="section-title">Recommended for you</h3>
+                <div id="recommendedStrip" class="reco-strip"></div>
             </div>
-            <h3 style="margin:0 0 10px 0;">📅 Upcoming events</h3>
+            <h3 class="section-title">Upcoming events</h3>
             <div id="categoryPills" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;"></div>
             <div style="margin-bottom:18px;">
-                <input id="searchBox" class="form-control" style="max-width:340px;" placeholder="Search by title or venue..." oninput="renderEvents()">
+                <input id="searchBox" class="form-control" style="max-width:340px;" placeholder="Filter by title or venue..." oninput="renderEvents()">
             </div>
-            <div id="eventGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;"></div>
+            <div id="eventGrid" class="event-grid"></div>
         </div>
 
         <!-- Bookings tab -->
@@ -69,7 +78,7 @@
     <!-- Ticket modal -->
     <div id="ticketModal" class="modal-overlay">
         <div class="modal-content" style="text-align:center;max-width:560px;">
-            <h3 style="margin-top:0;color:var(--primary);">🎫 Booking Confirmed!</h3>
+            <h3 style="margin-top:0;color:var(--accent);">Booking confirmed</h3>
             <div id="ticketDetails" style="margin-bottom:18px;"></div>
             <div id="ticketQrList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:10px;"></div>
             <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;">
@@ -81,7 +90,8 @@
     <!-- Wallet recharge modal -->
     <div id="rechargeModal" class="modal-overlay">
         <div class="modal-content">
-            <h3 style="margin-top:0;">💰 Add Money</h3>
+            <h3 style="margin-top:0;">Add Money</h3>
+            <div id="payStatus" class="text-muted" style="font-size:0.85rem;margin-bottom:12px;">Checking payment options...</div>
             <div style="margin-bottom:14px;">
                 <label class="text-muted" style="font-size:0.85rem;font-weight:600;">AMOUNT (₹)</label>
                 <input id="rechargeAmount" type="number" class="form-control" min="1" value="500">

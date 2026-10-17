@@ -10,11 +10,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         const cfg = await res.json();
         razorpayEnabled = !!cfg.enabled;
         razorpayKeyId = cfg.keyId || null;
+        const status = document.getElementById("payStatus");
         if (razorpayEnabled) {
-            await loadRazorpayScript();
-            document.getElementById("razorpayRow").style.display = "block";
+            try {
+                await loadRazorpayScript();
+                document.getElementById("razorpayRow").style.display = "block";
+                if (status) status.innerText = "Online payments enabled (Razorpay test mode).";
+            } catch (e) {
+                if (status) status.innerText = "Could not load Razorpay checkout — demo top-up still available.";
+            }
+        } else {
+            if (status) status.innerText = "Online payments not configured — demo top-up only. (Set RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET and restart.)";
         }
-    } catch (e) { console.error("payments config unavailable", e); }
+    } catch (e) {
+        console.error("payments config unavailable", e);
+        const status = document.getElementById("payStatus");
+        if (status) status.innerText = "Payment service unreachable — demo top-up only.";
+    }
 });
 
 function loadRazorpayScript() {
@@ -62,6 +74,11 @@ async function rechargeWallet(amount) {
 async function payWithRazorpay() {
     const amount = parseFloat(document.getElementById("rechargeAmount").value);
     if (!amount || amount <= 0) return alert("Invalid amount");
+    if (!window.Razorpay) {
+        try { await loadRazorpayScript(); }
+        catch (e) { return alert("Razorpay checkout could not load (check connection/ad-blocker). Use demo top-up instead."); }
+    }
+    let btn = null;
     try {
         const initRes = await fetch(`${API}/payments/initiate`, {
             method: "POST",

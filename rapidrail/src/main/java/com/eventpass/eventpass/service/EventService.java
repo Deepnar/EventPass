@@ -113,6 +113,7 @@ public class EventService {
         }
         if (update.getVenue() != null && !update.getVenue().isBlank()) existing.setVenue(update.getVenue().trim());
         if (update.getEventDateTime() != null) existing.setEventDateTime(update.getEventDateTime());
+        if (update.getImageUrl() != null) existing.setImageUrl(update.getImageUrl().trim());
         if (update.getTicketPrice() != null) {
             if (update.getTicketPrice().compareTo(BigDecimal.ZERO) < 0) throw new RuntimeException("Ticket price must be >= 0");
             existing.setTicketPrice(update.getTicketPrice().setScale(2, RoundingMode.HALF_UP));

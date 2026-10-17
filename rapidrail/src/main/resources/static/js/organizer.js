@@ -100,7 +100,7 @@ async function loadEvents() {
     document.getElementById("eventRows").innerHTML = myEvents.map(ev => `
         <tr>
             <td>${ev.id}</td>
-            <td>${escapeHtml(ev.title)}</td>
+            <td><div style="display:flex;align-items:center;gap:10px;">${ev.imageUrl ? `<img src="${escapeHtml(ev.imageUrl)}" alt="" style="width:56px;height:38px;object-fit:cover;border-radius:6px;" onerror="this.remove()">` : ""}<span>${escapeHtml(ev.title)}</span></div></td>
             <td>${escapeHtml(ev.category)}</td>
             <td>${escapeHtml(ev.venue)}</td>
             <td>${formatDateTime(ev.eventDateTime)}</td>
@@ -130,7 +130,8 @@ async function createEvent(e) {
         eventDateTime: document.getElementById("eTime").value,
         ticketPrice: parseFloat(document.getElementById("ePrice").value),
         totalCapacity: parseInt(document.getElementById("eCapacity").value),
-        description: document.getElementById("eDesc").value
+        description: document.getElementById("eDesc").value,
+        imageUrl: document.getElementById("eImage").value || null
     };
     const res = await fetch(`${API}/events`, { method: "POST", headers: authHeaders(), body: JSON.stringify(body) });
     if (res.ok) { e.target.reset(); loadEvents(); showAlert("Event created", "success"); }
@@ -212,11 +213,11 @@ function renderCheckInResult(result, data, isPreview) {
     const box = document.getElementById("checkinResult");
     const tag = isPreview ? " (preview — not consumed)" : "";
     const styles = {
-        VALID: ["result-valid", "✅ VALID — Entry permitted"],
-        ALREADY_USED: ["result-used", "⚠️ ALREADY USED — Entry denied"],
-        CANCELLED: ["result-denied", "⛔ CANCELLED — Entry denied"],
-        WRONG_EVENT: ["result-denied", "🚫 WRONG EVENT — Entry denied"],
-        INVALID: ["result-denied", "❌ INVALID — Entry denied"]
+        VALID: ["result-valid", "VALID — Entry permitted"],
+        ALREADY_USED: ["result-used", "ALREADY USED — Entry denied"],
+        CANCELLED: ["result-denied", "CANCELLED — Entry denied"],
+        WRONG_EVENT: ["result-denied", "WRONG EVENT — Entry denied"],
+        INVALID: ["result-denied", "INVALID — Entry denied"]
     };
     const [cls, title] = styles[result] || styles.INVALID;
     box.innerHTML = `<div class="alert ${cls}">
@@ -234,13 +235,13 @@ async function loadEventBookings() {
     const bookings = await res.json();
     const div = document.getElementById("eventBookings");
     if (!bookings.length) { div.innerHTML = '<p class="text-muted">No bookings for this event yet.</p>'; return; }
-    div.innerHTML = `<table><thead><tr><th>Booking</th><th>User</th><th>Qty</th><th>Amount</th><th>Time</th><th>Status</th></tr></thead>
+    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Booking</th><th>User</th><th>Qty</th><th>Amount</th><th>Time</th><th>Status</th></tr></thead>
         <tbody>${bookings.map(b => `<tr>
             <td><code style="font-size:0.75rem;">${b.bookingId.substring(0, 8)}…</code></td>
             <td>${escapeHtml(b.user ? b.user.username : "?")}</td>
             <td>${b.quantity}</td><td>₹${money(b.totalAmount)}</td>
             <td>${formatDateTime(b.bookingTime)}</td><td>${b.status}</td>
-        </tr>`).join("")}</tbody></table>`;
+        </tr>`).join("")}</tbody></table></div>`;
 }
 
 async function loadEventTickets() {
@@ -250,13 +251,13 @@ async function loadEventTickets() {
     const tickets = await res.json();
     const div = document.getElementById("eventTickets");
     if (!tickets.length) { div.innerHTML = '<p class="text-muted">No tickets issued for this event yet.</p>'; return; }
-    div.innerHTML = `<table><thead><tr><th>Ticket</th><th>QR Token</th><th>Booking</th><th>Status</th></tr></thead>
+    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Ticket</th><th>QR Token</th><th>Booking</th><th>Status</th></tr></thead>
         <tbody>${tickets.map(t => `<tr>
             <td><code style="font-size:0.75rem;">${t.ticketId.substring(0, 8)}…</code></td>
             <td><code style="font-size:0.75rem;">${escapeHtml((t.qrToken || "").substring(0, 18))}…</code></td>
             <td><code style="font-size:0.75rem;">${(t.booking ? t.booking.bookingId : "").substring(0, 8)}…</code></td>
             <td>${t.status}</td>
-        </tr>`).join("")}</tbody></table>`;
+        </tr>`).join("")}</tbody></table></div>`;
 }
 
 async function loadHistory() {
@@ -266,12 +267,12 @@ async function loadHistory() {
     const rows = await res.json();
     const div = document.getElementById("checkinHistory");
     if (!rows.length) { div.innerHTML = '<p class="text-muted">No check-ins recorded for this event yet.</p>'; return; }
-    div.innerHTML = `<table><thead><tr><th>#</th><th>Ticket</th><th>Checked In At</th></tr></thead>
+    div.innerHTML = `<div class="table-wrap"><table><thead><tr><th>#</th><th>Ticket</th><th>Checked In At</th></tr></thead>
         <tbody>${rows.map(r => `<tr>
             <td>${r.id}</td>
             <td><code style="font-size:0.75rem;">${escapeHtml(r.ticket ? r.ticket.qrToken : "?")}</code></td>
             <td>${formatDateTime(r.checkedInAt)}</td>
-        </tr>`).join("")}</tbody></table>`;
+        </tr>`).join("")}</tbody></table></div>`;
 }
 
 // ---------- ORGANIZERS ----------

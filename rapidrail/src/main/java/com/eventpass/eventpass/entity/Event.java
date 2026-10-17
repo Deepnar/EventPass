@@ -39,6 +39,10 @@ public class Event {
     @Column(nullable = false, name = "event_date_time")
     private LocalDateTime eventDateTime;
 
+    // Optional poster image (local /img/posters/... or external URL). Null = gradient fallback.
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(nullable = false, precision = 10, scale = 2, name = "ticket_price")
     private BigDecimal ticketPrice;
 
@@ -71,6 +75,8 @@ public class Event {
     public void setVenue(String venue) { this.venue = venue; }
     public LocalDateTime getEventDateTime() { return eventDateTime; }
     public void setEventDateTime(LocalDateTime eventDateTime) { this.eventDateTime = eventDateTime; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public BigDecimal getTicketPrice() { return ticketPrice; }
     public void setTicketPrice(BigDecimal ticketPrice) { this.ticketPrice = ticketPrice; }
     public Integer getTotalCapacity() { return totalCapacity; }

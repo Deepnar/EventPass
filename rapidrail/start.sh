@@ -34,5 +34,11 @@ for i in $(seq 1 30); do
 done
 
 export DB_PASSWORD
+if [ -n "${RAZORPAY_KEY_ID:-}" ] && [ -n "${RAZORPAY_KEY_SECRET:-}" ]; then
+  echo "Razorpay keys detected — online top-ups enabled."
+  export RAZORPAY_KEY_ID RAZORPAY_KEY_SECRET
+else
+  echo "No Razorpay keys — demo top-up only. (Set RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET to enable.)"
+fi
 echo "Starting EventPass on http://localhost:8081 ..."
 mvn spring-boot:run
